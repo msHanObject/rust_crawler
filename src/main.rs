@@ -45,11 +45,15 @@ fn get_links_from_html(html: &str) -> HashSet<String> {
         .collect::<HashSet<String>>()
 }
 
+fn has_extension(url: &&str) -> bool {
+    Path::new(url).extension().is_none()
+}
+
 fn normalize_url(url: &str) -> Option<String> {
     let new_url = Url::parse(url);
     match new_url {
         Ok(new_url) => {
-            if new_url.has_host() && new_url.host_str() == Some("snclab.kr") {
+            if let Some("egov.iptime.org/home") = new_url.host_str() {
                 Some(url.to_string())
             } else {
                 None
@@ -58,7 +62,7 @@ fn normalize_url(url: &str) -> Option<String> {
         Err(_e) => {
             // Relative urls are not parsed by Reqwest
             if url.starts_with('/') {
-                Some(format!("https://blog.snclab.kr{}", url))
+                Some(format!("http://egov.iptime.org/home{}", url))
             } else {
                 None
             }
@@ -75,10 +79,6 @@ fn fetch_url(client: &reqwest::blocking::Client, url: &str) -> Result<String> {
     Ok(body)
 }
 
-fn has_extension(url: &&str) -> bool {
-    Path::new(url).extension().is_none()
-}
-
 fn write_file(path: &str, content: &str) -> Result<()> {
     let dir = format!("static{}", path);
     fs::create_dir_all(format!("static{}", path)).map_err(|e| (&dir, e))?;
@@ -92,7 +92,7 @@ fn main() -> Result<()> {
     let now = Instant::now();
 
     let client = reqwest::blocking::Client::new();
-    let origin_url = "https://blog.snclab.kr/";
+    let origin_url = "http://egov.iptime.org/home/main.do";
 
     let body = fetch_url(&client, origin_url)?;
 
